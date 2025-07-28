@@ -25,6 +25,12 @@ func main() {
 		handleAddPassword()
 	case "get-pass":
 		handleGetPasswords()
+	case "add-mpin":
+		handleAddMPIN()
+	case "get-mpin":
+		handleGetMPIN()
+	case "list-mpin":
+		handleListMPINs()
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
@@ -144,6 +150,55 @@ func handleGetPasswords() {
 	}
 }
 
+func handleAddMPIN() {
+	fs := flag.NewFlagSet("add-mpin", flag.ExitOnError)
+	length := fs.Int("l", 4, "MPIN length (default: 4)")
+	name := fs.String("name", "", "Name/service (required)")
+	account := fs.String("account", "", "Account/username (required)")
+
+	fs.Parse(os.Args[2:])
+
+	if *name == "" || *account == "" {
+		fmt.Println("Error: --name and --account are required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	err := AddMPIN(*name, *account, *length)
+	if err != nil {
+		fmt.Printf("Error adding MPIN: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func handleGetMPIN() {
+	fs := flag.NewFlagSet("get-mpin", flag.ExitOnError)
+	name := fs.String("name", "", "Name/service (required)")
+	account := fs.String("account", "", "Account/username (required)")
+
+	fs.Parse(os.Args[2:])
+
+	if *name == "" || *account == "" {
+		fmt.Println("Error: --name and --account are required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	err := GetMPIN(*name, *account)
+	if err != nil {
+		fmt.Printf("Error retrieving MPIN: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func handleListMPINs() {
+	err := ListMPINs()
+	if err != nil {
+		fmt.Printf("Error listing MPINs: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  ./main setup-mfa --account <account> --name <name> -k <secret_key> [-s <seconds>]")
@@ -151,6 +206,9 @@ func printUsage() {
 	fmt.Println("  ./main generate --account <account> --name <name>")
 	fmt.Println("  ./main add-pass --name <service> --account <username> [-l <length>] [-a] [-A] [-d] [-s <special_chars>]")
 	fmt.Println("  ./main get-pass")
+	fmt.Println("  ./main add-mpin --name <service> --account <username> [-l <length>]")
+	fmt.Println("  ./main get-mpin --name <service> --account <username>")
+	fmt.Println("  ./main list-mpin")
 	fmt.Println()
 	fmt.Println("MFA Examples:")
 	fmt.Println("  ./main setup-mfa --account google --name dummy@gmail.com -k \"rfg3 oi7l zdiy 2yha sypa gdm6 g3qa d3pc\" -s 30")
@@ -163,6 +221,12 @@ func printUsage() {
 	fmt.Println("  ./main add-pass --name twitter --account handle -a -A -d")
 	fmt.Println("  ./main get-pass")
 	fmt.Println()
+	fmt.Println("MPIN Examples:")
+	fmt.Println("  ./main add-mpin --name google --account dummy@gmail.com -l 4")
+	fmt.Println("  ./main add-mpin --name bank --account myaccount -l 6")
+	fmt.Println("  ./main get-mpin --name google --account dummy@gmail.com")
+	fmt.Println("  ./main list-mpin")
+	fmt.Println()
 	fmt.Println("Password Flags:")
 	fmt.Println("  -l: Password length (default: 16)")
 	fmt.Println("  -a: Include lowercase letters")
@@ -170,4 +234,7 @@ func printUsage() {
 	fmt.Println("  -d: Include digits")
 	fmt.Println("  -s: Special characters - use 'default' for common special chars or provide custom like \"!@#$\"")
 	fmt.Println("      If not specified with other flags, no special characters will be used")
+	fmt.Println()
+	fmt.Println("MPIN Flags:")
+	fmt.Println("  -l: MPIN length (default: 4)")
 }
